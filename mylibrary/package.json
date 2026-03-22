@@ -1,0 +1,15 @@
+{
+  "name": "mylibrary",
+  "version": "1.0.0",
+  "description": "an app to display and interact with a local audio catalogue",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "quinn olney",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^41.0.3"
+  }
+}
