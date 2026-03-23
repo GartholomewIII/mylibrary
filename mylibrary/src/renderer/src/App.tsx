@@ -1,35 +1,73 @@
-import Versions from './components/Versions'
-import electronLogo from './assets/electron.svg'
+import { useState, useCallback} from 'react'
+import { ReactFlow, Node, useNodesState } from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
+import './assets/main.css'
 
-function App(): React.JSX.Element {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+
+let idCounter = 0
+
+export default function App() 
+{
+  //init react flow hook to manage nodes
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
+
+  //drag event for nodes
+  const onDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'copy'
+  }, [])
+
+  //only allows for audio clips to be dropped in
+  const onDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+
+    const files = Array.from(e.dataTransfer.files).filter(f => 
+      f.type.startsWith('audio/')
+    )
+
+    if (files.length === 0) return
+
+    //get location of audio clip drop
+    const bounds = e.currentTarget.getBoundingClientRect()
+
+    //initialize a new node with relevent data
+    const newNodes: Node[] = files.map(file => ({
+      id: `track-${idCounter++}`,
+      position: {
+        x: e.clientX - bounds.left,
+        y: e.clientY - bounds.top,
+      },
+      data: { label: file.name },
+      type: 'trackNode',
+    }))
+
+    setNodes(prev => [...prev, ...newNodes])
+  }, [])
 
   return (
-    <>
-      <img alt="logo" className="logo" src={electronLogo} />
-      <div className="creator">Powered by electron-vite</div>
-      <div className="text">
-        Build an Electron app with <span className="react">React</span>
-        &nbsp;and <span className="ts">TypeScript</span>
-      </div>
-      <p className="tip">
-        Please try pressing <code>F12</code> to open the devTool
-      </p>
-      <div className="actions">
-        <div className="action">
-          <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">
-            Documentation
-          </a>
-        </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
-            Send IPC
-          </a>
-        </div>
-      </div>
-      <Versions></Versions>
-    </>
+    <div className='mainContent'>
+      <ReactFlow
+        nodes={nodes}
+        edges={[]}
+        onNodesChange={onNodesChange}
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+        nodeTypes={{ trackNode: StarNode}}
+        fitView
+      >
+      </ReactFlow>
+    </div>
   )
 }
 
-export default App
+function StarNode() {
+  return (
+    <div style={{
+      width: 12,
+      height: 12,
+      borderRadius: '50%',
+      background: 'white',
+      boxShadow: '0 0 6px 2px rgba(255,255,255,0.6)',
+    }} />
+  )
+}
